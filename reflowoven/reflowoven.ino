@@ -1,14 +1,8 @@
 #include <PID_v1.h>
 #include <Adafruit_MAX31855.h>
-
-
-//defining data out, chip select, and clock I/O pins
-#define SWITCH 2
-#define MAXDO   3
-#define MAXCS   4
-#define MAXCLK  5
-#define RelayPin 6
-
+#include <stdint.h>
+#include "keypad.c"
+#include "constants.h"
 //Reflow Steps
 #define Preheat "PREHEAT"
 #define Soak "SOAK"
@@ -17,40 +11,41 @@
 #define ReflowZoneConst "REFLOW_CONST"
 #define Cooling "COOL"
 
-//Templretue SetPoints
-#define preHeatSetPoint 150
-#define soakSetPoint 180
-#define reflowSetPoint 280
-#define cooling 0
+struct temp_profile {
+    uint16_t    temps[4];
+    uint16_t    times[4];
+};
+
+// Setup the parameters for the reflow curve
+struct temp_profile reflow_curve;
+reflow_curve.temps = [150, 150, 250, 0];
+reflow_curve.times = [90, 180, 290, 340];
 
 
 //Define Variables we'll be connecting to
-double Setpoint, Input, Output;
-unsigned long startTimeProgram;
-unsigned long startTimeReflow;
+
 String reflowStep;
 bool on=false;
-long int preheatTime = 90000;
-long int soakTime = 180000;
-long int reflowRiseTime = 290000;
-long int ReflowZoneConstTime = 340000;
-long int coolingTime = 380000;
+long int  = 90;
+long int soakTime = 180;
+long int reflowRiseTime = 290;
+long int ReflowZoneConstTime = 340;
+long int coolingTime = 380;
 
 // initialize the Thermocouple
 Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
 
 //Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint, 2, 5, 1, DIRECT);
+
 
 int WindowSize = 5000;
 unsigned long windowStartTime;
 
 void setup() {
-  // put your setup code here, to run once:
-   pinMode(RelayPin, OUTPUT);
-   pinMode(SWITCH, INPUT);
-   
+    Serial.begin(9600);
+    pinMode(RELAY_PIN, OUTPUT);
 
+    ELAY_IN
   //initialize the variables we're linked to
   Setpoint = 0;
 
@@ -59,58 +54,67 @@ void setup() {
 
   //turn the PID on
   myPID.SetMode(AUTOMATIC);
-  windowStartTime = millis();
-  startTimeProgram=millis();
+  windowStartTime = millis()/1000;
+  startTimeProgram= millis()/1000;
   reflowStep=Preheat; //step 1 is Preheating
-  
-  Serial.begin(9600);
+
   delay(500);
+
+  run_oven();
 
 }
 
-void loop() {
-Serial.println(digitalRead(SWITCH));
-double c = thermocouple.readCelsius();
-startTimeProgram=millis();
+void run_oven(){
+    double read_temp, output, setpoint;
+    uint8_t running = 1;
+    uint8_t reflow_step = 0;
+    // Set up the PID
 
-if (digitalRead(SWITCH)){
-    if (on==false)
-      {
-        Serial.println("ON BITCH");
-        on=true;
-        startTimeReflow=startTimeProgram;
+    PID oven_pid(&read_temp, &output, &setpoint, 2, 5, 1, DIRECT);
+    oven_pid.SetTunings(50,0,0);
+
+// Record the start time
+    uint32_t START_TIME = millis() / 1000;
+    uint32_t CURR_TIME;
+    // preheat
+    lcd.write('PREHEAT'); // placeholder
+    while(running) {
+//this is current time, if greater than next looking for...
+        if () {
+
+            reflow_step += 1;
+            setpoint =reflow_curve.temps[reflow_step]
         }
-  Serial.println("Staying ON BITCH");
-  // Serial.print("start time: ");
-  long int display_ = (long int)startTimeProgram-(long int)startTimeReflow;
-  //Serial.println(display_);
 
-   Input = thermocouple.readCelsius();
-   myPID.Compute();
 
-  
+        read_temp = thermocouple.readCelsius()
+        oven_pid.compute()
+
+        if () {
+
+        }
+    }
+;
+
+
+}
+
+
   if (reflowStep==Preheat){
     Setpoint=preHeatSetPoint;
     myPID.SetTunings(50,0,0);
-    /*
-    Serial.print("display: ");
-    Serial.print(display_);
-    Serial.print(" preheatTime: ");
-    Serial.print(preheatTime);
-    Serial.print(" ");
-    Serial.println(display_>=preheatTime);
-    */
+    
     if (display_>=preheatTime){
       reflowStep=Soak;
       }
     }
-  
+
   else if (reflowStep==Soak){
     Setpoint=soakSetPoint;
     if (display_>=soakTime)
       reflowStep=ReflowZoneRise;
     }
-    
+
    //stages we will test afterwards
   else if (reflowStep==ReflowZoneRise){
     Setpoint=reflowSetPoint;
@@ -130,7 +134,7 @@ if (digitalRead(SWITCH)){
     Setpoint=cooling;
  if (isnan(c)&&c<=28.0) {
     on=false;
-    
+
    }
     }
    double c = thermocouple.readCelsius();
@@ -141,20 +145,20 @@ if (digitalRead(SWITCH)){
 //   Serial.print(startTimeReflow);
    Serial.print(", displayTime:");
    Serial.print(display_);
-   
+
    Serial.print(", ");
    if (isnan(c)) {
      Serial.println("Something wrong with thermocouple!");
    } else {
-     Serial.println(c); 
+     Serial.println(c);
    }
 
-  unsigned long now = millis();
+  unsigned long now = millis()/1000;
   if (now - windowStartTime > WindowSize)
   { //time to shift the Relay Window
     windowStartTime += WindowSize;
   }
- 
+
   if (Output > now - windowStartTime) {
     digitalWrite(RelayPin, HIGH);
     }
@@ -170,4 +174,3 @@ if (digitalRead(SWITCH)){
      digitalWrite(RelayPin, LOW);
     }
 }
-
