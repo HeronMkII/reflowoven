@@ -1,8 +1,19 @@
+/*
+    DESCRIPTION: Reflow oven control software
+    AUTHORS: Ben, Mahnoor, Rebecca, Dylan
+
+    Contains functions and logic for controlling UTAT Space System's reflow oven
+
+    TODO:
+    -   refactor all the code
+*/
+
+
 #include <PID_v1.h>
-#include <Adafruit_MAX31855.h>
 #include <stdint.h>
-#include "keypad.c"
 #include "constants.h"
+#include "keypad.c"
+#include "thermocouple.c"
 //Reflow Steps
 #define Preheat "PREHEAT"
 #define Soak "SOAK"
@@ -21,7 +32,6 @@ struct temp_profile reflow_curve;
 reflow_curve.temps = [150, 150, 250, 0];
 reflow_curve.times = [90, 180, 290, 340];
 
-
 //Define Variables we'll be connecting to
 
 String reflowStep;
@@ -32,9 +42,6 @@ long int reflowRiseTime = 290;
 long int ReflowZoneConstTime = 340;
 long int coolingTime = 380;
 
-// initialize the Thermocouple
-Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
-
 //Specify the links and initial tuning parameters
 
 
@@ -44,8 +51,14 @@ unsigned long windowStartTime;
 void setup() {
     Serial.begin(9600);
     pinMode(RELAY_PIN, OUTPUT);
+    init_keypad();
+    init_thermocouple();
+    // eventually
+    //init_lcd();
 
-    ELAY_IN
+    // Start SPI for the thermocouple
+    SPI.begin();
+
   //initialize the variables we're linked to
   Setpoint = 0;
 
@@ -103,7 +116,7 @@ void run_oven(){
   if (reflowStep==Preheat){
     Setpoint=preHeatSetPoint;
     myPID.SetTunings(50,0,0);
-    
+
     if (display_>=preheatTime){
       reflowStep=Soak;
       }
