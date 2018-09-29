@@ -1,19 +1,30 @@
 /*
     DESCRIPTION: Reflow oven control software
-    AUTHORS: Ben, Mahnoor, Rebecca, Dylan
-
+    AUTHORS: Ben, Mahnoor, Rebecca, Dylan, Andy 
     Contains functions and logic for controlling UTAT Space System's reflow oven
 
     TODO:
     -   refactor all the code
-*/
 
+    *New library rgb_lcd.h is refered to as lcd. Some functions you will need to know
+    *to work with this new library:
+    
+    lcd.print() prints the message on the board.
+    lcd.setCursor() moves the message to a new line. This is to prevent the message from going over. Set to (0,2) for new line.
+    lcd.setRGB(r,g,b): set (255,0,0) for red, (0,255,0) for green, (0,0,255) for blue.
+    lcd.clear() to clear the screen.
+*/
 
 #include <PID_v1.h>
 #include <stdint.h>
+#include <Arduino.h>
+#include <Wire.h>
 #include "constants.h"
 #include "keypad.c"
 #include "thermocouple.c"
+#include "r"
+#include "rgb_lcd.h"
+
 //Reflow Steps
 #define Preheat "PREHEAT"
 #define Soak "SOAK"
@@ -21,6 +32,8 @@
 #define ReflowZoneRise "REFLOW_RIZE"
 #define ReflowZoneConst "REFLOW_CONST"
 #define Cooling "COOL"
+
+rgb_lcd lcd;
 
 struct temp_profile {
     uint16_t    temps[4];
@@ -44,7 +57,6 @@ long int coolingTime = 380;
 
 //Specify the links and initial tuning parameters
 
-
 int WindowSize = 5000;
 unsigned long windowStartTime;
 
@@ -53,28 +65,41 @@ void setup() {
     pinMode(RELAY_PIN, OUTPUT);
     init_keypad();
     init_thermocouple();
-    // eventually
-    //init_lcd();
-
-    // Start SPI for the thermocouple
+    
+    // Sets up the number of cols (16) and rows (2) that the LCD can use for display.
+    lcd.begin(16,2);
+    // Start SPI for the thermocouple.
+    // Prints out the initialization message on the LCD.
     SPI.begin();
+    lcd.print("The LCD is now");
+    lcd.setCursor(0,2);
+    lcd.print("active");
+    delay(2000);
+    lcd.clear();
 
-  //initialize the variables we're linked to
-  Setpoint = 0;
-
-  //tell the PID to range between 0 and the full window size
-  myPID.SetOutputLimits(0, WindowSize);
-
-  //turn the PID on
-  myPID.SetMode(AUTOMATIC);
-  windowStartTime = millis()/1000;
-  startTimeProgram= millis()/1000;
-  reflowStep=Preheat; //step 1 is Preheating
-
-  delay(500);
-
-  run_oven();
-
+    //initialize the variables we're linked to.
+    Setpoint = 0;
+    lcd.setRGB(0, 0, 255);
+    lcd.print("Initializing");
+    lcd.setCursor(0,2);
+    lcd.print("variables");
+    delay(2000);
+    lcd.clear();
+    
+    //tell the PID to range between 0 and the full window size
+    myPID.SetOutputLimits(0, WindowSize);
+    lcd.setRGB(0, 0, 255);
+    lcd.print("Setting Window");
+    delay(2000);
+    lcd.clear();
+    
+    //turn the PID on
+    myPID.SetMode(AUTOMATIC);
+    windowStartTime = millis()/1000;
+    startTimeProgram= millis()/1000;
+    reflowStep=Preheat; //step 1 is Preheating
+    delay(500);
+    run_oven();
 }
 
 void run_oven(){
