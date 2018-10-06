@@ -13,13 +13,13 @@
 
 struct temp_profile {
     uint16_t    temps[4];
-    uint16_t    times[4];
+    uint16_t    times[5];
 };
 
 // Setup the parameters for the reflow curve
 struct temp_profile reflow_curve;
-reflow_curve.temps = [150, 150, 250, 0];
-reflow_curve.times = [90, 180, 290, 340];
+reflow_curve.temps = [150, 180, 280, 0];
+reflow_curve.times = [90, 180, 290, 340,380];
 
 
 //Define Variables we'll be connecting to
@@ -42,12 +42,11 @@ int WindowSize = 5000;
 unsigned long windowStartTime;
 
 void setup() {
-    Serial.begin(9600);
-    pinMode(RELAY_PIN, OUTPUT);
+  Serial.begin(9600);
+  pinMode(RELAY_PIN, OUTPUT);
 
-    ELAY_IN
   //initialize the variables we're linked to
-  Setpoint = 0;
+//  setpoint = 0;
 
   //tell the PID to range between 0 and the full window size
   myPID.SetOutputLimits(0, WindowSize);
@@ -56,121 +55,112 @@ void setup() {
   myPID.SetMode(AUTOMATIC);
   windowStartTime = millis()/1000;
   startTimeProgram= millis()/1000;
-  reflowStep=Preheat; //step 1 is Preheating
+  reflow_step=0; //step 0 is Preheating
 
   delay(500);
 
   run_oven();
 
+///look at lcd code -- start, stop, reset
+
 }
 
 void run_oven(){
     double read_temp, output, setpoint;
-    uint8_t running = 1;
+    unsigned long now;
+    uint8_t running=0;
     uint8_t reflow_step = 0;
     // Set up the PID
 
     PID oven_pid(&read_temp, &output, &setpoint, 2, 5, 1, DIRECT);
     oven_pid.SetTunings(50,0,0);
 
+    if (digitalRead(SWITCH)){
+      if (running==0){
+        running = 1;
+        lcd.write('ON'); //placeholder
+      }
+      else {
+        running=0;
+        lcd.write('OFF');
+        START_TIME = startTimeProgram;
+        digitalWrite(RelayPin, LOW);
+      }
+    }
 // Record the start time
     uint32_t START_TIME = millis() / 1000;
     uint32_t CURR_TIME;
-    // preheat
-    lcd.write('PREHEAT'); // placeholder
+
+    CURR_TIME = startTimeProgram -  START_TIME;
+
     while(running) {
-//this is current time, if greater than next looking for...
-        if () {
-
-            reflow_step += 1;
-            setpoint =reflow_curve.temps[reflow_step]
-        }
-
-
         read_temp = thermocouple.readCelsius()
-        oven_pid.compute()
-
-        if () {
-
+//this is current time, if greater than next looking for...
+        if (reflow_step==0) {
+          lcd.write('PREHEAT'); // placeholder
+          setpoint = reflow_curve.temps[reflow_step]
+          if (CURR_TIME >= reflow_curves.times[0]) {
+            reflow_step += 1;
+          }
         }
-    }
-;
+        else if (reflow_step==1) {
+          lcd.write('Soak'); // placeholder
+          setpoint = reflow_curve.temps[reflow_step]
+          //pid??
+          if (CURR_TIME >= reflow_curves.times[1]) {
+            reflow_step += 1;
+          }
+        }
+        else if (reflow_step==2) {
+          lcd.write('Reflow Zone Rise'); // placeholder
+          setpoint = reflow_curve.temps[reflow_step]
+          //pid??
+          if (CURR_TIME >= reflow_curves.times[2]) {
+            reflow_step += 1;
+          }
+        }
+        else if (reflow_step==3) {
+          lcd.write('Reflow Zone Const'); // placeholder
+          setpoint = reflow_curve.temps[reflow_step]
+          //pid??
+          if (CURR_TIME >= reflow_curves.times[3]) {
+            reflow_step += 1;
+          }
+        }
+        else if (reflow_step==4) {
+          lcd.write('Cooling'); // placeholder
+          setpoint = reflow_curve.temps[reflow_step]
+          //pid??
+          if (isnan(read_temp)&&read_temp<=28.0) {
+            running = 0;
+            lcd.write('OFF-something wrong'); //placeholder
+          }
+        }
+        if (digitalRead(SWITCH)==0) {
+          running=0;
+          lcd.write('OFF'); //placeholder
+        }
 
+//        read_temp = thermocouple.readCelsius();
 
-}
+//      if (isnan(c)) {
+//          Serial.println("Something wrong with thermocouple!");
+//      } else {
+        Serial.println(read_temp);
+  //    }
 
+        now = millis()/1000 - WindowStartTime;
+        //shift the relay window??
+        if (now > WindowSize) {
+          windowStartTime += WindowSize;
+        }
 
-  if (reflowStep==Preheat){
-    Setpoint=preHeatSetPoint;
-    myPID.SetTunings(50,0,0);
-    
-    if (display_>=preheatTime){
-      reflowStep=Soak;
-      }
-    }
-
-  else if (reflowStep==Soak){
-    Setpoint=soakSetPoint;
-    if (display_>=soakTime)
-      reflowStep=ReflowZoneRise;
-    }
-
-   //stages we will test afterwards
-  else if (reflowStep==ReflowZoneRise){
-    Setpoint=reflowSetPoint;
-    myPID.SetTunings(50,0,0);
-    if (display_>=reflowRiseTime){
-      reflowStep=ReflowZoneConst;
-    }
-  }
-  else if(reflowStep==ReflowZoneConst){
-  Setpoint = reflowSetPoint;
-  myPID.SetTunings(50,0,0);
-    if (display_>= ReflowZoneConstTime){
-      reflowStep=Cooling;
-    }
-  }
-  else if (reflowStep==Cooling){
-    Setpoint=cooling;
- if (isnan(c)&&c<=28.0) {
-    on=false;
-
-   }
-    }
-   double c = thermocouple.readCelsius();
-   Serial.print(reflowStep);
- //Serial.print(", startTimeProgram:");
-  // Serial.print(startTimeProgram);
-  // Serial.print(", startTimeRReflow:");
-//   Serial.print(startTimeReflow);
-   Serial.print(", displayTime:");
-   Serial.print(display_);
-
-   Serial.print(", ");
-   if (isnan(c)) {
-     Serial.println("Something wrong with thermocouple!");
-   } else {
-     Serial.println(c);
-   }
-
-  unsigned long now = millis()/1000;
-  if (now - windowStartTime > WindowSize)
-  { //time to shift the Relay Window
-    windowStartTime += WindowSize;
-  }
-
-  if (Output > now - windowStartTime) {
-    digitalWrite(RelayPin, HIGH);
-    }
-  else {
-    digitalWrite(RelayPin, LOW);
-  }
-   delay(1000);
-  }
-  else {
-    Serial.println("NOT ON BITCH");
-    on=false;
-    startTimeReflow=startTimeProgram;
-     digitalWrite(RelayPin, LOW);
+        if (Output > now) {
+          digitalWrite(RelayPin, HIGH);
+        }
+        else {
+          digitalWrite(RelayPin, LOW);
+        }
+        delay(1000);
     }
 }
