@@ -1,25 +1,14 @@
-/*
-    DESCRIPTION: Keypad interfacing functions
-    AUTHORS: Dylan Vogel
+#define COL1 10
+#define COL2 11
+#define COL3 12
+#define ROW1 9
+#define ROW2 6
+#define ROW3 7
+#define ROW4 8
 
-    Contains functions for interfacing with this type of keypad:
-    https://cdn.sparkfun.com/assets/7/e/f/6/f/sparkfun_keypad.pdf
-
-    USAGE:
-    - Call init_keypad to setup the pins associated with each row and column
-    - Call scan_keypad() to return a uint8_t corresponding to the position of the key that was pressed
-        - scan_keypad() only returns a single value per press, so it doesn't support multi-button presses
-        - scan_keypad maps "*" to 10, and "#" to 12.
-        - -1 is returned to indicate that nothing was pressed
-
-    TODO:
-    -   Test that the library still works with the whole oven
-*/
-
-#include <stdint.h>
-
-void init_keypad() {
+void setup_keypad() {
   // put your setup code here, to run once:
+
   pinMode(COL1, OUTPUT);
   pinMode(COL2, OUTPUT);
   pinMode(COL3, OUTPUT);
@@ -33,7 +22,7 @@ void init_keypad() {
   digitalWrite(COL3, HIGH);
 }
 
-uint8_t scan_row(int col) {
+int scan_row(int col) {
   int row;
   digitalWrite(col, LOW);
   delay(1);
@@ -52,7 +41,7 @@ uint8_t scan_row(int col) {
   return row;
 }
 
-int8_t scan_keypad() {
+int scan_keypad() {
   int row;
   row = scan_row(COL1);
   if (row != 0){
@@ -77,7 +66,7 @@ int8_t scan_keypad() {
       case 3:
         return 8;
       case 4:
-        return 0;
+        return 11;
     }
   }
   row = scan_row(COL3);
@@ -93,15 +82,14 @@ int8_t scan_keypad() {
         return 12;
     }
   }
-  return -1;
+  return 0;
 }
 
-/*
 void setup() {
   Serial.begin(9600);
   Serial.println("Serial initialized");
-  init_keypad();
-
+  setup_keypad();
+  
 }
 void loop() {
   int key = scan_keypad();
@@ -116,11 +104,9 @@ void loop() {
 //  Serial.println(digitalRead(ROW2));
 //  Serial.println(digitalRead(ROW3));
 //  Serial.println(digitalRead(ROW4));
-
+  
 
   switch (key){
-    case -1:
-      break;
     case 1:
       Serial.println("1");
       break;
@@ -151,13 +137,12 @@ void loop() {
     case 10:
       Serial.println("*");
       break;
-    case 0:
+    case 11:
       Serial.println("0");
       break;
     case 12:
-      Serial.println("#");
-      break;
+      Serial.println("#");  
+      break; 
   }
   delay(100);
 }
-*/
