@@ -15,15 +15,7 @@
     TODO:
     -   Test that the library still works with the whole oven
 */
-
-<<<<<<< HEAD
 #include "keypad.h"
-
-=======
-#include <stdint.h>
-#include "constants.h"
-#include "arduino.h"
->>>>>>> c82c89c2f5974fb4be7f356b896426799a5d6ddf
 
 void init_keypad() {
   // put your setup code here, to run once:

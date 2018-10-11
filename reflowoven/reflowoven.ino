@@ -22,8 +22,7 @@
 #include "constants.h"
 #include "keypad.c"
 #include "thermocouple.c"
-//#include "r"    //what is this?
-#include "rgb_lcd.h"
+//#include "rgb_lcd.h"
 #include <stdint.h>
 //#include <SPI.h>
 
@@ -35,7 +34,7 @@
 // #define ReflowZoneConst "REFLOW_CONST"
 // #define Cooling "COOL"
 
-rgb_lcd lcd;
+//rgb_lcd lcd;
 
 struct temp_profile {
     uint16_t    temps[4];
@@ -74,12 +73,12 @@ void setup() {
     // Start SPI for the thermocouple.
     // Prints out the initialization message on the LCD.
     SPI.begin();
-    lcd.print("The LCD is now");
+/*    lcd.print("The LCD is now");
     lcd.setCursor(0,2);
     lcd.print("active");
     delay(2000);
     lcd.clear();
-
+*/
     // //initialize the variables we're linked to.
     // Setpoint = 0;
     // lcd.setRGB(0, 0, 255);  // set colour to blue
@@ -91,13 +90,13 @@ void setup() {
 
     //tell the PID to range between 0 and the full window size
     myPID.SetOutputLimits(0, WindowSize);
-    lcd.setRGB(0, 0, 255);  // set colour of RGB to blue
+/*    lcd.setRGB(0, 0, 255);  // set colour of RGB to blue
     lcd.print("Setting Window");
     delay(2000);
     lcd.clear();
-
+*/
     //selection options: start, stop, reset, power off
-    lcd.print("Press 1 to Start");
+/*    lcd.print("Press 1 to Start");
     key = scan_keypad();
     delay(2000);
     lcd.clear();
@@ -105,10 +104,11 @@ void setup() {
     key = scan_keypad();
     delay(2000);
     lcd.clear();
+*/
 //    lcd.print("Press 3 to Stop");
 //    key = scan_keypad();
 
-    while (key != 1 and key != 2) {
+/*    while (key != 1 and key != 2) {
       if (key == 1) {   //if 1 is selected: run oven
         //turn the PID on
         myPID.SetMode(AUTOMATIC);
@@ -128,6 +128,10 @@ void setup() {
         delay(2000);
       }
 
+}
+*/
+void loop(){
+  //nothing
 }
 
 void run_oven(){
@@ -164,7 +168,7 @@ void run_oven(){
     CURR_TIME = startTimeProgram -  START_TIME;
 
     while(running) {
-        lcd.print("Press 3 to Stop");
+  /*      lcd.print("Press 3 to Stop");
         key = scan_keypad();
         delay(2000);
         lcd.clear();
@@ -175,6 +179,7 @@ void run_oven(){
           delay(2000);
           lcd.clear();
         }
+  */
         read_temp = readCelsius()
 //this is current time, if greater than next looking for...
         if (reflow_step==0) {
@@ -242,7 +247,10 @@ void run_oven(){
 //          Serial.println("Something wrong with thermocouple!");
 //      } else {
         Serial.println(read_temp);
-  //    }
+        lcd.print(read_temp);
+        delay(1000);
+        lcd.clear();
+//      }
 
         now = millis()/1000 - WindowStartTime;
         //shift the relay window??

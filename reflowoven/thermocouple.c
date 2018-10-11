@@ -9,20 +9,10 @@
     -   Implement temperature compensation based on reference junction temp
 */
 
-
-<<<<<<< HEAD
 #include "thermocouple.h"
 
 void init_thermocouple(){
     //SPI.begin();
-=======
-#include <SPI.h>
-#include <stdint.h>
-#include "constants.h"
-
-void init_thermocouple(){
-    SPI.begin();
->>>>>>> c82c89c2f5974fb4be7f356b896426799a5d6ddf
     pinMode(THERMOCOUPLE_CS, OUTPUT);
     digitalWrite(THERMOCOUPLE_CS, HIGH);
 }
@@ -31,11 +21,7 @@ uint32_t read_raw_thermocouple(){
     uint32_t data = 0;
     digitalWrite(THERMOCOUPLE_CS, LOW);
     for (uint8_t i = 3; i >= 0; i--){
-<<<<<<< HEAD
-       // data |= (SPI.transfer(0x00) << (8 * i));
-=======
         data |= SPI.transfer(0x00) << (8 * i);
->>>>>>> c82c89c2f5974fb4be7f356b896426799a5d6ddf
     }
     digitalWrite(THERMOCOUPLE_CS, HIGH);
     return data;
