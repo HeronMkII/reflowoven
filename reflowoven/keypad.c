@@ -17,6 +17,8 @@
 */
 
 #include <stdint.h>
+#include "constants.h"
+#include "arduino.h"
 
 void init_keypad() {
   // put your setup code here, to run once:

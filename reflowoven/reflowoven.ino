@@ -1,6 +1,6 @@
 /*
     DESCRIPTION: Reflow oven control software
-    AUTHORS: Ben, Mahnoor, Rebecca, Dylan, Andy 
+    AUTHORS: Ben, Mahnoor, Rebecca, Dylan, Andy
     Contains functions and logic for controlling UTAT Space System's reflow oven
 
     TODO:
@@ -8,7 +8,7 @@
 
     *New library rgb_lcd.h is refered to as lcd. Some functions you will need to know
     *to work with this new library:
-    
+
     lcd.print() prints the message on the board.
     lcd.setCursor() moves the message to a new line. This is to prevent the message from going over. Set to (0,2) for new line.
     lcd.setRGB(r,g,b): set (255,0,0) for red, (0,255,0) for green, (0,0,255) for blue.
@@ -22,16 +22,18 @@
 #include "constants.h"
 #include "keypad.c"
 #include "thermocouple.c"
-#include "r"
+//#include "r"    //what is this?
 #include "rgb_lcd.h"
+#include <stdint.h>
+//#include <SPI.h>
 
 //Reflow Steps
-#define Preheat "PREHEAT"
-#define Soak "SOAK"
-#define ReflowZone "REFLOW"
-#define ReflowZoneRise "REFLOW_RIZE"
-#define ReflowZoneConst "REFLOW_CONST"
-#define Cooling "COOL"
+// #define Preheat "PREHEAT"
+// #define Soak "SOAK"
+// #define ReflowZone "REFLOW"
+// #define ReflowZoneRise "REFLOW_RIZE"
+// #define ReflowZoneConst "REFLOW_CONST"
+// #define Cooling "COOL"
 
 rgb_lcd lcd;
 
@@ -47,13 +49,13 @@ reflow_curve.times = [90, 180, 290, 340,380];
 
 //Define Variables we'll be connecting to
 
-String reflowStep;
-bool on=false;
-long int  = 90;
-long int soakTime = 180;
-long int reflowRiseTime = 290;
-long int ReflowZoneConstTime = 340;
-long int coolingTime = 380;
+//String reflowStep;
+//bool on=false;
+// long int  = 90;
+// long int soakTime = 180;
+// long int reflowRiseTime = 290;
+// long int ReflowZoneConstTime = 340;
+// long int coolingTime = 380;
 
 //Specify the links and initial tuning parameters
 
@@ -61,34 +63,12 @@ int WindowSize = 5000;
 unsigned long windowStartTime;
 
 void setup() {
-<<<<<<< HEAD
-  Serial.begin(9600);
-  pinMode(RELAY_PIN, OUTPUT);
-
-  //initialize the variables we're linked to
-//  setpoint = 0;
-
-  //tell the PID to range between 0 and the full window size
-  myPID.SetOutputLimits(0, WindowSize);
-
-  //turn the PID on
-  myPID.SetMode(AUTOMATIC);
-  windowStartTime = millis()/1000;
-  startTimeProgram= millis()/1000;
-  reflow_step=0; //step 0 is Preheating
-
-  delay(500);
-
-  run_oven();
-
-///look at lcd code -- start, stop, reset
-
-=======
+    int key;
     Serial.begin(9600);
     pinMode(RELAY_PIN, OUTPUT);
     init_keypad();
     init_thermocouple();
-    
+
     // Sets up the number of cols (16) and rows (2) that the LCD can use for display.
     lcd.begin(16,2);
     // Start SPI for the thermocouple.
@@ -100,35 +80,60 @@ void setup() {
     delay(2000);
     lcd.clear();
 
-    //initialize the variables we're linked to.
-    Setpoint = 0;
-    lcd.setRGB(0, 0, 255);
-    lcd.print("Initializing");
-    lcd.setCursor(0,2);
-    lcd.print("variables");
-    delay(2000);
-    lcd.clear();
-    
+    // //initialize the variables we're linked to.
+    // Setpoint = 0;
+    // lcd.setRGB(0, 0, 255);  // set colour to blue
+    // lcd.print("Initializing");
+    // lcd.setCursor(0,2);
+    // lcd.print("variables");
+    // delay(2000);
+    // lcd.clear();
+
     //tell the PID to range between 0 and the full window size
     myPID.SetOutputLimits(0, WindowSize);
-    lcd.setRGB(0, 0, 255);
+    lcd.setRGB(0, 0, 255);  // set colour of RGB to blue
     lcd.print("Setting Window");
     delay(2000);
     lcd.clear();
-    
-    //turn the PID on
-    myPID.SetMode(AUTOMATIC);
-    windowStartTime = millis()/1000;
-    startTimeProgram= millis()/1000;
-    reflowStep=Preheat; //step 1 is Preheating
-    delay(500);
-    run_oven();
->>>>>>> bf677c018a0a649b91dfd17695083aed6b383e73
+
+    //selection options: start, stop, reset, power off
+    lcd.print("Press 1 to Start");
+    key = scan_keypad();
+    delay(2000);
+    lcd.clear();
+    lcd.print("Press 2 to Turn off");
+    key = scan_keypad();
+    delay(2000);
+    lcd.clear();
+//    lcd.print("Press 3 to Stop");
+//    key = scan_keypad();
+
+    while (key != 1 and key != 2) {
+      if (key == 1) {   //if 1 is selected: run oven
+        //turn the PID on
+        myPID.SetMode(AUTOMATIC);
+        windowStartTime = millis()/1000;
+        startTimeProgram= millis()/1000;
+        reflow_step=0; //step 0 is Preheating
+        delay(500);
+        lcd.print('Starting');
+        run_oven();
+      }
+  //    else if (key == 2) {
+        //***
+  //    }
+      else {
+        lcd.print('Invalid Input, select again');
+        key = scan_keypad();
+        delay(2000);
+      }
+
 }
 
 void run_oven(){
     double read_temp, output, setpoint;
     unsigned long now;
+    int key;
     uint8_t running=0;
     uint8_t reflow_step = 0;
     // Set up the PID
@@ -139,11 +144,15 @@ void run_oven(){
     if (digitalRead(SWITCH)){
       if (running==0){
         running = 1;
-        lcd.write('ON'); //placeholder
+        lcd.print('ON');
+        delay(2000);
+        lcd.clear();
       }
       else {
         running=0;
-        lcd.write('OFF');
+        lcd.print('OFF');
+        delay(2000);
+        lcd.clear();
         START_TIME = startTimeProgram;
         digitalWrite(RelayPin, LOW);
       }
@@ -155,17 +164,32 @@ void run_oven(){
     CURR_TIME = startTimeProgram -  START_TIME;
 
     while(running) {
-        read_temp = thermocouple.readCelsius()
+        lcd.print("Press 3 to Stop");
+        key = scan_keypad();
+        delay(2000);
+        lcd.clear();
+        if (key == 3) { // or switch(key)  case 3
+          //Stop
+          running = 0;
+          lcd.print('Turning off');
+          delay(2000);
+          lcd.clear();
+        }
+        read_temp = readCelsius()
 //this is current time, if greater than next looking for...
         if (reflow_step==0) {
-          lcd.write('PREHEAT'); // placeholder
+          lcd.print('PREHEAT');
+          delay(2000);
+          lcd.clear();
           setpoint = reflow_curve.temps[reflow_step]
           if (CURR_TIME >= reflow_curves.times[0]) {
             reflow_step += 1;
           }
         }
         else if (reflow_step==1) {
-          lcd.write('Soak'); // placeholder
+          lcd.print('Soak');
+          delay(2000);
+          lcd.clear();
           setpoint = reflow_curve.temps[reflow_step]
           //pid??
           if (CURR_TIME >= reflow_curves.times[1]) {
@@ -173,7 +197,9 @@ void run_oven(){
           }
         }
         else if (reflow_step==2) {
-          lcd.write('Reflow Zone Rise'); // placeholder
+          lcd.print('Reflow Zone Rise');
+          delay(2000);
+          lcd.clear();
           setpoint = reflow_curve.temps[reflow_step]
           //pid??
           if (CURR_TIME >= reflow_curves.times[2]) {
@@ -181,7 +207,9 @@ void run_oven(){
           }
         }
         else if (reflow_step==3) {
-          lcd.write('Reflow Zone Const'); // placeholder
+          lcd.print('Reflow Zone Const');
+          delay(2000);
+          lcd.clear();
           setpoint = reflow_curve.temps[reflow_step]
           //pid??
           if (CURR_TIME >= reflow_curves.times[3]) {
@@ -189,37 +217,32 @@ void run_oven(){
           }
         }
         else if (reflow_step==4) {
-          lcd.write('Cooling'); // placeholder
+          lcd.print("%s\n", );('Cooling');
+          delay(2000);
+          lcd.clear();
           setpoint = reflow_curve.temps[reflow_step]
           //pid??
           if (isnan(read_temp)&&read_temp<=28.0) {
             running = 0;
-            lcd.write('OFF-something wrong'); //placeholder
+            lcd.print('OFF-something wrong');
+            delay(2000);
+            lcd.clear();
           }
         }
         if (digitalRead(SWITCH)==0) {
           running=0;
-          lcd.write('OFF'); //placeholder
+          lcd.print('OFF');
+          delay(2000);
+          lcd.clear();
         }
 
-//        read_temp = thermocouple.readCelsius();
+//        read_temp = readCelsius();
 
-<<<<<<< HEAD
 //      if (isnan(c)) {
 //          Serial.println("Something wrong with thermocouple!");
 //      } else {
         Serial.println(read_temp);
   //    }
-=======
-  if (reflowStep==Preheat){
-    Setpoint=preHeatSetPoint;
-    myPID.SetTunings(50,0,0);
-
-    if (display_>=preheatTime){
-      reflowStep=Soak;
-      }
-    }
->>>>>>> bf677c018a0a649b91dfd17695083aed6b383e73
 
         now = millis()/1000 - WindowStartTime;
         //shift the relay window??
