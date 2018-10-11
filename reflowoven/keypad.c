@@ -16,7 +16,8 @@
     -   Test that the library still works with the whole oven
 */
 
-#include <stdint.h>
+#include "keypad.h"
+
 
 void init_keypad() {
   // put your setup code here, to run once:
