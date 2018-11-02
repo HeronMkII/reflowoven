@@ -16,6 +16,7 @@
     -   Test that the library still works with the whole oven
 */
 #include "keypad.h"
+//#include <SPI.h>
 
 void init_keypad() {
   // put your setup code here, to run once:
