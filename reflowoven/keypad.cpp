@@ -16,9 +16,12 @@
     -   Test that the library still works with the whole oven
 */
 #include "keypad.h"
-//#include <SPI.h>
 
 void init_keypad() {
+  if(!Serial){
+    Serial.begin(9600);
+  }
+  
   // put your setup code here, to run once:
   pinMode(COL1, OUTPUT);
   pinMode(COL2, OUTPUT);
@@ -96,28 +99,8 @@ int8_t scan_keypad() {
   return -1;
 }
 
-/*
-void setup() {
-  Serial.begin(9600);
-  Serial.println("Serial initialized");
-  init_keypad();
-
-}
-void loop() {
+void test_keypad(void) {
   int key = scan_keypad();
-
-//  digitalWrite(COL1, LOW);
-//  Serial.println(digitalRead(ROW1));
-//  Serial.println(digitalRead(ROW2));
-//  Serial.println(digitalRead(ROW3));
-//  Serial.println(digitalRead(ROW4));
-//  digitalWrite(COL1, HIGH);
-//  Serial.println(digitalRead(ROW1));
-//  Serial.println(digitalRead(ROW2));
-//  Serial.println(digitalRead(ROW3));
-//  Serial.println(digitalRead(ROW4));
-
-
   switch (key){
     case -1:
       break;
@@ -157,7 +140,5 @@ void loop() {
     case 12:
       Serial.println("#");
       break;
-  }
-  delay(100);
+    }
 }
-*/
